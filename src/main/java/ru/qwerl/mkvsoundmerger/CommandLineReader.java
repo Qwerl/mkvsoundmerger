@@ -15,6 +15,7 @@ import static java.util.Optional.empty;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static ru.qwerl.mkvsoundmerger.handler.command.CommandRunner.commandRunner;
+import static ru.qwerl.mkvsoundmerger.handler.command.ConsoleCommandWriter.consoleCommandWriter;
 import static ru.qwerl.mkvsoundmerger.handler.command.ScriptFileGenerator.scriptFileGenerator;
 
 public class CommandLineReader {
@@ -40,19 +41,19 @@ public class CommandLineReader {
 
   private Optional<CommandHandler> readOptionalSaveScript() {
     return line.hasOption(SAVE_FILE_ARG)
-        ? Optional.of(commandRunner())
+        ? Optional.of(scriptFileGenerator())
         : empty();
   }
 
   private Optional<CommandHandler> readOptionalExecuteCommands() {
     return line.hasOption(EXECUTE_ARG)
-        ? Optional.of(scriptFileGenerator())
+        ? Optional.of(commandRunner())
         : empty();
   }
 
   private Optional<CommandHandler> readOptionalConsoleWriter() {
     return line.hasOption(CONSOLE_ARG)
-        ? Optional.of(ConsoleCommandWriter.consoleCommandWriter())
+        ? Optional.of(consoleCommandWriter())
         : empty();
   }
 
@@ -92,7 +93,6 @@ public class CommandLineReader {
 
   private Option soundArg() {
     return Option.builder(SOUND_ARG)
-        .argName(SOUND_ARG)
         .required(true)
         .hasArgs()
         .desc("Sound directory name")
@@ -101,7 +101,6 @@ public class CommandLineReader {
 
   private Option videoArg() {
     return Option.builder(VIDEO_ARG)
-        .argName(VIDEO_ARG)
         .hasArg(true)
         .required(true)
         .numberOfArgs(1)
@@ -110,8 +109,7 @@ public class CommandLineReader {
   }
 
   private Option createScriptFile() {
-    return Option.builder()
-        .argName(SAVE_FILE_ARG)
+    return Option.builder(SAVE_FILE_ARG)
         .longOpt("save_file")
         .required(false)
         .hasArg(false)
@@ -120,8 +118,7 @@ public class CommandLineReader {
   }
 
   private Option execute() {
-    return Option.builder()
-        .argName(EXECUTE_ARG)
+    return Option.builder(EXECUTE_ARG)
         .longOpt("execute_commands")
         .required(false)
         .hasArg(false)

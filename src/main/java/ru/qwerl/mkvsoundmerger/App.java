@@ -80,7 +80,15 @@ public class App {
 
   private boolean isAttachable(File video, File sound) {
     //TODO: add more ways to find link
+    return fileNamesEquals(video, sound) || soundFileContainsVideoFileName(video, sound);
+  }
+
+  private boolean fileNamesEquals(File video, File sound) {
     return removeExtension(sound.getName()).equals(removeExtension(video.getName()));
+  }
+
+  private boolean soundFileContainsVideoFileName(File video, File sound) {
+    return removeExtension(sound.getName()).contains(removeExtension(video.getName()));
   }
 
   private CommandLineReader readArgs(String[] args) {

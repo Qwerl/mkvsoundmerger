@@ -6,14 +6,14 @@ import java.util.List;
 
 public class FileUtils {
 
-  public static List<File> getAllFiles(File curDir, boolean depthSearchApplied, String format) {
+  public static List<File> getAllFiles(File curDir, boolean depthSearchApplied, List<String> formats) {
     List<File> foundFiles = new ArrayList<>();
     File[] filesList = curDir.listFiles();
     for (File f : filesList != null ? filesList : new File[0]) {
       if (f.isDirectory() && depthSearchApplied) {
-        foundFiles.addAll(getAllFiles(f, true, format));
+        foundFiles.addAll(getAllFiles(f, true, formats));
       }
-      if (f.isFile() && f.getName().toLowerCase().endsWith(format)) {
+      if (f.isFile() && formats.stream().anyMatch(format -> f.getName().toLowerCase().endsWith(format))) {
         foundFiles.add(f);
       }
     }

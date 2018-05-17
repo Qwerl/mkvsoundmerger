@@ -1,10 +1,7 @@
 package ru.qwerl.mkvsoundmerger;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import com.google.common.collect.HashMultimap;
 import ru.qwerl.mkvsoundmerger.handler.command.CommandHandler;
@@ -25,7 +22,7 @@ public class App {
   public void run(String[] args) {
     CommandLineReader reader = readArgs(args);
     File videoDirectory = reader.videoDirectory();
-    List<File> soundDirectories = reader.soundDirectories(videoDirectory);
+    Set<File> soundDirectories = reader.soundDirectories(videoDirectory);
     List<CommandHandler> commandHandlers = reader.commandHandlers();
 
     List<File> videoFiles = findVideoFiles(videoDirectory);

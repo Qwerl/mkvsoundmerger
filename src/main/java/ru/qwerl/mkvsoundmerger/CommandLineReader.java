@@ -1,17 +1,16 @@
 package ru.qwerl.mkvsoundmerger;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import org.apache.commons.cli.*;
 import ru.qwerl.mkvsoundmerger.handler.command.CommandHandler;
-import ru.qwerl.mkvsoundmerger.handler.command.ConsoleCommandWriter;
+import ru.qwerl.mkvsoundmerger.search.SoundDirectoryFinder;
 
 import static java.lang.System.lineSeparator;
 import static java.util.Optional.empty;
+import static java.util.Optional.of;
+import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static ru.qwerl.mkvsoundmerger.handler.command.CommandRunner.commandRunner;
@@ -21,6 +20,7 @@ import static ru.qwerl.mkvsoundmerger.handler.command.ScriptFileGenerator.script
 public class CommandLineReader {
 
   private static final String SOUND_ARG = "sound";
+  private static final String AUTO_SOUND_ARG = "soundsearch";
   private static final String VIDEO_ARG = "video";
   private static final String EXECUTE_ARG = "exec";
   private static final String SAVE_FILE_ARG = "sf";
@@ -64,14 +64,27 @@ public class CommandLineReader {
     return videoDirectory;
   }
 
-  public List<File> soundDirectories(File videoDirectory) {
-    String[] parsedSoundDirectories = line.getOptionValues(SOUND_ARG);
-    List<File> soundDirectories = Arrays.stream(parsedSoundDirectories)
-        .map(directory -> new File(videoDirectory.getPath() + "/" + directory))
-        .collect(toList());
+  public HashSet<File> soundDirectories(File videoDirectory) {
+    HashSet<File> soundPaths = new HashSet<>();
+    soundArgs(videoDirectory).ifPresent(soundPaths::addAll);
+    soundSearchEnabled(videoDirectory).ifPresent(soundPaths::addAll);
     System.out.println("SOUND DIRECTORIES:");
-    System.out.println(soundDirectories.stream().map(File::getPath).collect(joining(lineSeparator())));
-    return soundDirectories;
+    System.out.println(soundPaths.stream().map(File::getPath).collect(joining(lineSeparator())));
+    return soundPaths;
+  }
+
+  private Optional<List<File>> soundArgs(File videoDirectory) {
+    return ofNullable(line.getOptionValues(SOUND_ARG))
+        .map(soundDirectoryArgs ->
+            Arrays.stream(soundDirectoryArgs)
+                .map(directory -> new File(videoDirectory.getPath() + "/" + directory))
+                .collect(toList()));
+  }
+
+  private Optional<List<File>> soundSearchEnabled(File videoDirectory) {
+    return line.hasOption(AUTO_SOUND_ARG)
+        ? of(new SoundDirectoryFinder().searchIn(videoDirectory))
+        : empty();
   }
 
   public List<CommandHandler> commandHandlers() {
@@ -86,6 +99,7 @@ public class CommandLineReader {
     return new Options()
         .addOption(videoArg())
         .addOption(soundArg())
+        .addOption(soundSearchArg())
         .addOption(execute())
         .addOption(createScriptFile())
         .addOption(createConsoleWriter());
@@ -93,9 +107,17 @@ public class CommandLineReader {
 
   private Option soundArg() {
     return Option.builder(SOUND_ARG)
-        .required(true)
+        .required(false)
         .hasArgs()
-        .desc("Sound directory name")
+        .desc("sound directory name")
+        .build();
+  }
+
+  private Option soundSearchArg() {
+    return Option.builder(AUTO_SOUND_ARG)
+        .required(false)
+        .hasArg(false)
+        .desc("enabling sound directory search")
         .build();
   }
 
@@ -113,7 +135,7 @@ public class CommandLineReader {
         .longOpt("save_file")
         .required(false)
         .hasArg(false)
-        .desc("Create script file or not")
+        .desc("create script file or not")
         .build();
   }
 
@@ -122,7 +144,7 @@ public class CommandLineReader {
         .longOpt("execute_commands")
         .required(false)
         .hasArg(false)
-        .desc("Execute commands or not")
+        .desc("execute commands or not")
         .build();
   }
 
@@ -130,7 +152,7 @@ public class CommandLineReader {
     return Option.builder(CONSOLE_ARG)
         .required(false)
         .hasArg(false)
-        .desc("Write commands to console")
+        .desc("write commands to console")
         .build();
   }
 

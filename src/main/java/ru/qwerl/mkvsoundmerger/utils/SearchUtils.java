@@ -1,10 +1,7 @@
 package ru.qwerl.mkvsoundmerger.utils;
 
 import java.io.File;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import ru.qwerl.mkvsoundmerger.Format.Sound;
 import ru.qwerl.mkvsoundmerger.Format.Video;
@@ -21,7 +18,7 @@ public class SearchUtils {
     return foundVideoFiles;
   }
 
-  public static Map<File, Collection<File>> findSoundFiles(List<File> soundDirectories) {
+  public static Map<File, Collection<File>> findSoundFiles(Set<File> soundDirectories) {
     Map<File, Collection<File>> directoryFiles = new HashMap<>();
     soundDirectories.forEach(soundDirectory -> {
       List<File> foundSoundFiles = FileUtils.getAllFiles(soundDirectory, false, Sound.extensionsList());

@@ -118,9 +118,4 @@ public class App {
     return removeExtension(sound.getName()).contains(removeExtension(video.getName()));
   }
 
-  private CommandLineReader readArgs(String[] args) {
-    return new CommandLineReader()
-        .read(args);
-  }
-
 }

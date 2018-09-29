@@ -1,8 +1,7 @@
 package ru.qwerl.mkvsoundmerger;
 
-import java.io.File;
-import java.util.*;
-
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.cli.*;
 import ru.qwerl.mkvsoundmerger.handler.command.CommandHandler;
 import ru.qwerl.mkvsoundmerger.search.FileDirectoryFinder;
@@ -18,6 +17,7 @@ import static ru.qwerl.mkvsoundmerger.handler.command.CommandRunner.commandRunne
 import static ru.qwerl.mkvsoundmerger.handler.command.ConsoleCommandWriter.consoleCommandWriter;
 import static ru.qwerl.mkvsoundmerger.handler.command.ScriptFileGenerator.scriptFileGenerator;
 
+@Slf4j
 public class CommandLineReader {
 
   private static final String VIDEO_ARG = "video";
@@ -29,15 +29,16 @@ public class CommandLineReader {
 
   private CommandLine line;
 
+  public static CommandLineReader readArgs(String[] args) {
+    return new CommandLineReader()
+        .read(args);
+  }
+
+  @SneakyThrows
   public CommandLineReader read(String[] args) {
-    try {
-      CommandLineParser parser = new DefaultParser();
-      line = parser.parse(createOptions(), args);
-      return this;
-    }
-    catch (ParseException e) {
-      throw new RuntimeException(e);
-    }
+    CommandLineParser parser = new DefaultParser();
+    line = parser.parse(createOptions(), args);
+    return this;
   }
 
   private Optional<CommandHandler> readOptionalSaveScript() {
@@ -60,17 +61,16 @@ public class CommandLineReader {
 
   public File videoDirectory() {
     File videoDirectory = new File(line.getOptionValue(VIDEO_ARG));
-    System.out.println("VIDEO DIRECTORY:");
-    System.out.println(videoDirectory.getPath());
+    log.info("VIDEO DIRECTORY:");
+    log.info(videoDirectory.getPath());
     return videoDirectory;
   }
 
   public HashSet<File> soundDirectories(File videoDirectory) {
     HashSet<File> soundPaths = new HashSet<>();
     soundArgs(videoDirectory).ifPresent(soundPaths::addAll);
-    soundSearchEnabled(videoDirectory).ifPresent(soundPaths::addAll);
-    System.out.println("SOUND DIRECTORIES:");
-    System.out.println(soundPaths.stream().map(File::getPath).collect(joining(lineSeparator())));
+    log.info("SOUND DIRECTORIES:");
+    soundPaths.stream().map(File::getPath).forEach(log::info);
     return soundPaths;
   }
 

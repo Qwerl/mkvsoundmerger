@@ -29,7 +29,7 @@ public class AppTest {
     testArgs[3] = "Rus Sounds/first";
     testArgs[4] = "Eng Sounds";
     testArgs[5] = "-console";
-    testArgs[6] = "-soundsearch";
+    testArgs[6] = "-search";
     app = new App();
   }
 

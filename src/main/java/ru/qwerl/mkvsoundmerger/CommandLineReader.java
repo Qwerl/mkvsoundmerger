@@ -5,13 +5,14 @@ import java.util.*;
 
 import org.apache.commons.cli.*;
 import ru.qwerl.mkvsoundmerger.handler.command.CommandHandler;
-import ru.qwerl.mkvsoundmerger.search.SoundDirectoryFinder;
+import ru.qwerl.mkvsoundmerger.search.FileDirectoryFinder;
 
-import static java.lang.System.lineSeparator;
+import java.io.File;
+import java.util.*;
+
+import static java.util.Arrays.stream;
 import static java.util.Optional.empty;
-import static java.util.Optional.of;
 import static java.util.Optional.ofNullable;
-import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static ru.qwerl.mkvsoundmerger.handler.command.CommandRunner.commandRunner;
 import static ru.qwerl.mkvsoundmerger.handler.command.ConsoleCommandWriter.consoleCommandWriter;
@@ -19,9 +20,9 @@ import static ru.qwerl.mkvsoundmerger.handler.command.ScriptFileGenerator.script
 
 public class CommandLineReader {
 
-  private static final String SOUND_ARG = "sound";
-  private static final String AUTO_SOUND_ARG = "soundsearch";
   private static final String VIDEO_ARG = "video";
+  private static final String SOUND_ARG = "sound";
+  private static final String SEARCH_ARG = "search";
   private static final String EXECUTE_ARG = "exec";
   private static final String SAVE_FILE_ARG = "sf";
   private static final String CONSOLE_ARG = "console";
@@ -73,18 +74,33 @@ public class CommandLineReader {
     return soundPaths;
   }
 
+  //NOT implemented eet
+  public Set<File> subtitleDirectories(File videoDirectory) {
+    HashSet<File> subtitlePaths = new HashSet<>();
+    //TODO: subtitleArgs(videoDirectory).ifPresent(subtitlePaths::addAll);
+    log.info("SUBTITLE DIRECTORIES:");
+    subtitlePaths.stream().map(File::getPath).forEach(log::info);
+    return subtitlePaths;
+  }
+
+  public Set<File> attachableFilesDirectories(File directory) {
+    Set<File> attachableFileDirectories = FileDirectoryFinder.searchIn(directory, Format.attachableFilesExtensions());
+    log.info("ATTACHABLE FILE DIRECTORIES:");
+    attachableFileDirectories.stream().map(File::getPath).forEach(log::info);
+    return attachableFileDirectories;
+  }
+
   private Optional<List<File>> soundArgs(File videoDirectory) {
     return ofNullable(line.getOptionValues(SOUND_ARG))
         .map(soundDirectoryArgs ->
-            Arrays.stream(soundDirectoryArgs)
+            stream(soundDirectoryArgs)
                 .map(directory -> new File(videoDirectory.getPath() + "/" + directory))
-                .collect(toList()));
+                .collect(toList())
+        );
   }
 
-  private Optional<List<File>> soundSearchEnabled(File videoDirectory) {
-    return line.hasOption(AUTO_SOUND_ARG)
-        ? of(new SoundDirectoryFinder().searchIn(videoDirectory))
-        : empty();
+  public boolean isSearchEnabled() {
+    return line.hasOption(SEARCH_ARG);
   }
 
   public List<CommandHandler> commandHandlers() {
@@ -99,7 +115,7 @@ public class CommandLineReader {
     return new Options()
         .addOption(videoArg())
         .addOption(soundArg())
-        .addOption(soundSearchArg())
+        .addOption(searchArg())
         .addOption(execute())
         .addOption(createScriptFile())
         .addOption(createConsoleWriter());
@@ -113,11 +129,11 @@ public class CommandLineReader {
         .build();
   }
 
-  private Option soundSearchArg() {
-    return Option.builder(AUTO_SOUND_ARG)
+  private Option searchArg() {
+    return Option.builder(SEARCH_ARG)
         .required(false)
         .hasArg(false)
-        .desc("enabling sound directory search")
+        .desc("enabling directory search")
         .build();
   }
 

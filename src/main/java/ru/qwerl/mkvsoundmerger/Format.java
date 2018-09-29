@@ -1,6 +1,9 @@
 package ru.qwerl.mkvsoundmerger;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static java.util.Arrays.stream;
@@ -8,8 +11,8 @@ import static java.util.Arrays.stream;
 public class Format {
 
   public enum Video {
-    MKV(".mkv");
-
+    MKV(".mkv"),
+    AVI(".avi");
     private String extension;
 
     Video(String extension) {
@@ -20,10 +23,10 @@ public class Format {
       return extension;
     }
 
-    public static List<String> extensionsList() {
+    public static Set<String> extensionsList() {
       return stream(values())
           .map(Video::extension)
-          .collect(Collectors.toList());
+          .collect(Collectors.toSet());
     }
 
   }
@@ -41,12 +44,38 @@ public class Format {
       return extension;
     }
 
-    public static List<String> extensionsList() {
+    public static Set<String> extensionsList() {
       return stream(values())
           .map(Sound::extension)
-          .collect(Collectors.toList());
+          .collect(Collectors.toSet());
     }
 
+  }
+
+  public enum Subtitle {
+    ASS(".ass");
+    private String extension;
+
+    Subtitle(String extension) {
+      this.extension = extension;
+    }
+
+    public String extension() {
+      return extension;
+    }
+
+    public static Set<String> extensionsList() {
+      return stream(values())
+          .map(Subtitle::extension)
+          .collect(Collectors.toSet());
+    }
+  }
+
+  public static Set<String> attachableFilesExtensions() {
+    Set<String> extensionsList = new HashSet<>();
+    extensionsList.addAll(Sound.extensionsList());
+    extensionsList.addAll(Subtitle.extensionsList());
+    return extensionsList;
   }
 
 }

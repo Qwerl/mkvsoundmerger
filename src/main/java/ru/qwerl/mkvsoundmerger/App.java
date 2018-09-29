@@ -4,12 +4,18 @@ import java.io.File;
 import java.util.*;
 
 import com.google.common.collect.HashMultimap;
+import org.jetbrains.annotations.NotNull;
+import ru.qwerl.mkvsoundmerger.Format.Sound;
+import ru.qwerl.mkvsoundmerger.Format.Subtitle;
+import ru.qwerl.mkvsoundmerger.Format.Video;
 import ru.qwerl.mkvsoundmerger.handler.command.CommandHandler;
+import ru.qwerl.mkvsoundmerger.utils.FileUtils;
 
 import static java.nio.file.FileSystems.getDefault;
 import static org.apache.commons.io.FilenameUtils.removeExtension;
-import static ru.qwerl.mkvsoundmerger.utils.SearchUtils.findSoundFiles;
-import static ru.qwerl.mkvsoundmerger.utils.SearchUtils.findVideoFiles;
+import static ru.qwerl.mkvsoundmerger.CommandLineReader.readArgs;
+import static ru.qwerl.mkvsoundmerger.Format.attachableFilesExtensions;
+import static ru.qwerl.mkvsoundmerger.utils.SearchUtils.findFilesInDirectoriesByFormat;
 
 public class App {
 
@@ -19,19 +25,42 @@ public class App {
     new App().run(args);
   }
 
-  public void run(String[] args) {
+  void run(String[] args) {
     CommandLineReader reader = readArgs(args);
+
     File videoDirectory = reader.videoDirectory();
-    Set<File> soundDirectories = reader.soundDirectories(videoDirectory);
-    List<CommandHandler> commandHandlers = reader.commandHandlers();
+    Set<File> videoFiles = FileUtils.getAllFiles(videoDirectory, Video.extensionsList());
 
-    List<File> videoFiles = findVideoFiles(videoDirectory);
-    Map<File, Collection<File>> soundFiles = findSoundFiles(soundDirectories);
+    Map<File, Set<File>> attachableDirectoryToAttachableFiles;
+    if (reader.isSearchEnabled()) {
+      Set<File> attachableFilesDirectories = reader.attachableFilesDirectories(videoDirectory);
+      attachableDirectoryToAttachableFiles = findFilesInDirectoriesByFormat(attachableFilesDirectories, attachableFilesExtensions());
+    }
+    else {
+      Set<File> soundDirectories = reader.soundDirectories(videoDirectory);
+      Set<File> subtitleDirectories = reader.subtitleDirectories(videoDirectory);
+      Map<File, Set<File>> soundDirectoryToSoundFiles = findFilesInDirectoriesByFormat(soundDirectories, Sound.extensionsList());
+      Map<File, Set<File>> subtitleDirectoryToSubtitleFiles = findFilesInDirectoriesByFormat(subtitleDirectories, Subtitle.extensionsList());
+      attachableDirectoryToAttachableFiles = mergeAttachableFiles(soundDirectoryToSoundFiles, subtitleDirectoryToSubtitleFiles);
+    }
+    Map<File, Collection<File>> videoToAttachableFiles = createLinkVideoToAttachableFile(videoFiles, attachableDirectoryToAttachableFiles);
+    List<List<String>> commandsToAttachableFileDirectory = buildCommands(videoToAttachableFiles);
+    sendCommandsToHandlers(commandsToAttachableFileDirectory, reader.commandHandlers());
+  }
 
-    Map<File, Collection<File>> soundsToVideo = createLinkSoundsToVideo(videoFiles, soundFiles);
-
-    List<List<String>> commandsToSoundDirectory = prepareCommands(soundsToVideo);
-    sendCommandsToHandlers(commandsToSoundDirectory, commandHandlers);
+  @SafeVarargs
+  @NotNull
+  private final Map<File, Set<File>> mergeAttachableFiles(Map<File, Set<File>>... attachableDirectoryToAttachableFilesForMergeMaps) {
+    Map<File, Set<File>> attachableDirectoryToAttachableFiles = new HashMap<>();
+    Arrays.stream(attachableDirectoryToAttachableFilesForMergeMaps)
+        .forEach(attachableDirectoryToAttachableFilesForMerge ->
+            attachableDirectoryToAttachableFilesForMerge
+                .forEach((file, files) -> attachableDirectoryToAttachableFiles.merge(file, files, (attachableFiles, mergeFiles) -> {
+                  attachableFiles.addAll(mergeFiles);
+                  return attachableFiles;
+                }))
+        );
+    return attachableDirectoryToAttachableFiles;
   }
 
   private void sendCommandsToHandlers(List<List<String>> commandsToSoundDirectory, List<CommandHandler> commandHandlers) {
@@ -42,19 +71,19 @@ public class App {
     );
   }
 
-  private List<List<String>> prepareCommands(Map<File, Collection<File>> combine) {
+  private List<List<String>> buildCommands(Map<File, Collection<File>> combine) {
     List<List<String>> commands = new ArrayList<>();
-    combine.forEach((video, sounds) -> commands.add(prepareCommandsForCurrentVideo(video, sounds)));
+    combine.forEach((video, attachableFile) -> commands.add(buildCommand(video, attachableFile)));
     return commands;
   }
 
-  private List<String> prepareCommandsForCurrentVideo(File video, Collection<File> sounds) {
+  private List<String> buildCommand(File video, Collection<File> attachableFiles) {
     List<String> commands = new ArrayList<>();
     commands.add("mkvmerge");
     commands.add("-o");
     commands.add(getOutputVideoAbsolutePath(video));
     commands.add(video.getPath());
-    sounds.forEach(sound -> commands.add(sound.getPath()));
+    attachableFiles.forEach(attachableFile -> commands.add(attachableFile.getPath()));
     return commands;
   }
 
@@ -62,22 +91,23 @@ public class App {
     return video.getParentFile().getAbsolutePath() + PATH_SEPARATOR + "combined" + PATH_SEPARATOR + video.getName();
   }
 
-  private Map<File, Collection<File>> createLinkSoundsToVideo(List<File> videoFiles, Map<File, Collection<File>> soundDirectories) {
-    HashMultimap<File, File> videoToSounds = HashMultimap.create();
+  private Map<File, Collection<File>> createLinkVideoToAttachableFile(Set<File> videoFiles, Map<File, Set<File>> attachableDirectoryToAttachableFile) {
+    HashMultimap<File, File> videoToAttachableFiles = HashMultimap.create();
     videoFiles.forEach((video) ->
-        soundDirectories.forEach((soundDirectory, soundFiles) -> soundFiles
+        attachableDirectoryToAttachableFile.forEach((directory, files) -> files
             .stream()
-            .filter(sound -> isAttachable(video, sound))
+            .filter(file -> isAttachable(video, file))
             .findAny()
-            .ifPresent(sound -> videoToSounds.put(video, sound))
+            .ifPresent(file -> videoToAttachableFiles.put(video, file))
         )
     );
-    return videoToSounds.asMap();
+    return videoToAttachableFiles.asMap();
   }
 
-  private boolean isAttachable(File video, File sound) {
+  private boolean isAttachable(File video, File attachableFile) {
     //TODO: add more ways to find link
-    return fileNamesEquals(video, sound) || soundFileContainsVideoFileName(video, sound);
+    return fileNamesEquals(video, attachableFile) ||
+        soundFileContainsVideoFileName(video, attachableFile);
   }
 
   private boolean fileNamesEquals(File video, File sound) {

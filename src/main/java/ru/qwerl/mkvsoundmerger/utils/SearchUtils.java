@@ -1,17 +1,20 @@
 package ru.qwerl.mkvsoundmerger.utils;
 
 import java.io.File;
-import java.util.*;
+import java.util.Map;
+import java.util.Set;
+
+import static java.util.function.Function.identity;
+import static java.util.stream.Collectors.toMap;
 
 public class SearchUtils {
 
   public static Map<File, Set<File>> findFilesInDirectoriesByFormat(Set<File> directories, Set<String> formats) {
-    Map<File, Set<File>> directoryFiles = new HashMap<>();
-    directories.forEach(directory -> {
-      Set<File> foundSoundFiles = FileUtils.getAllFiles(directory, formats); //TODO: depthSearchApplied maybe?
-      directoryFiles.put(directory, foundSoundFiles);
-    });
-    return directoryFiles;
+    return directories.stream()
+        .collect(toMap(
+            identity(),
+            directory -> FileUtils.getAllFiles(directory, formats)
+        ));
   }
 
 }

@@ -1,4 +1,4 @@
-package ru.qwerl.mkvsoundmerger.handler.command;
+package ru.qwerl.mkvsoundmerger.handler;
 
 import java.util.List;
 

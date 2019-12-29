@@ -1,10 +1,10 @@
-package ru.qwerl.mkvsoundmerger;
+package ru.qwerl.mkvsoundmerger.cli;
 
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.cli.*;
-import ru.qwerl.mkvsoundmerger.handler.command.CommandHandler;
-import ru.qwerl.mkvsoundmerger.search.FileDirectoryFinder;
+import ru.qwerl.mkvsoundmerger.handler.CommandHandler;
+import ru.qwerl.mkvsoundmerger.handler.CommandHandlers;
 
 import java.io.File;
 import java.util.*;
@@ -13,9 +13,9 @@ import static java.util.Arrays.stream;
 import static java.util.Optional.empty;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toList;
-import static ru.qwerl.mkvsoundmerger.handler.command.CommandRunner.commandRunner;
-import static ru.qwerl.mkvsoundmerger.handler.command.ConsoleCommandWriter.consoleCommandWriter;
-import static ru.qwerl.mkvsoundmerger.handler.command.ScriptFileGenerator.scriptFileGenerator;
+import static ru.qwerl.mkvsoundmerger.handler.CommandRunner.commandRunner;
+import static ru.qwerl.mkvsoundmerger.handler.ConsoleCommandWriter.consoleCommandWriter;
+import static ru.qwerl.mkvsoundmerger.handler.ScriptFileGenerator.scriptFileGenerator;
 
 @Slf4j
 public class CommandLineReader {
@@ -29,16 +29,22 @@ public class CommandLineReader {
 
   private CommandLine line;
 
-  public static CommandLineReader readArgs(String[] args) {
-    return new CommandLineReader()
-        .read(args);
+  public static ApplicationProperties readArgs(String[] args) {
+    return new CommandLineReader().read(args);
   }
 
   @SneakyThrows
-  public CommandLineReader read(String[] args) {
+  public ApplicationProperties read(String[] args) {
     CommandLineParser parser = new DefaultParser();
     line = parser.parse(createOptions(), args);
-    return this;
+    File mainDirectory = videoDirectory();
+    return ApplicationProperties.builder()
+        .isSearchEnabled(isSearchEnabled())
+        .videoDirectory(mainDirectory)
+        .soundDirectories(soundDirectories(mainDirectory))
+        .subtitleDirectories(subtitleDirectories(mainDirectory))
+        .commandHandlers(commandHandlers())
+        .build();
   }
 
   private Optional<CommandHandler> readOptionalSaveScript() {
@@ -66,45 +72,38 @@ public class CommandLineReader {
     return videoDirectory;
   }
 
-  public HashSet<File> soundDirectories(File videoDirectory) {
+  public HashSet<File> soundDirectories(File mainDirectory) {
     HashSet<File> soundPaths = new HashSet<>();
-    soundArgs(videoDirectory).ifPresent(soundPaths::addAll);
+    soundArgs(mainDirectory).ifPresent(soundPaths::addAll);
     log.info("SOUND DIRECTORIES:");
     soundPaths.stream().map(File::getPath).forEach(log::info);
     return soundPaths;
   }
 
-  //NOT implemented eet
-  public Set<File> subtitleDirectories(File videoDirectory) {
-    HashSet<File> subtitlePaths = new HashSet<>();
-    //TODO: subtitleArgs(videoDirectory).ifPresent(subtitlePaths::addAll);
-    log.info("SUBTITLE DIRECTORIES:");
-    subtitlePaths.stream().map(File::getPath).forEach(log::info);
-    return subtitlePaths;
-  }
-
-  public Set<File> attachableFilesDirectories(File directory) {
-    Set<File> attachableFileDirectories = FileDirectoryFinder.searchIn(directory, Format.attachableFilesExtensions());
-    log.info("ATTACHABLE FILE DIRECTORIES:");
-    attachableFileDirectories.stream().map(File::getPath).forEach(log::info);
-    return attachableFileDirectories;
-  }
-
-  private Optional<List<File>> soundArgs(File videoDirectory) {
+  private Optional<List<File>> soundArgs(File mainDirectory) {
     return ofNullable(line.getOptionValues(SOUND_ARG))
         .map(soundDirectoryArgs ->
             stream(soundDirectoryArgs)
-                .map(directory -> new File(videoDirectory.getPath() + "/" + directory))
+                .map(directory -> new File(mainDirectory.getPath() + "/" + directory))
                 .collect(toList())
         );
+  }
+
+  //NOT implemented yet
+  public Set<File> subtitleDirectories(File mainDirectory) {
+    HashSet<File> subtitlePaths = new HashSet<>();
+    //TODO: subtitleArgs(mainDirectory).ifPresent(subtitlePaths::addAll);
+    log.info("SUBTITLE DIRECTORIES:");
+    subtitlePaths.stream().map(File::getPath).forEach(log::info);
+    return subtitlePaths;
   }
 
   public boolean isSearchEnabled() {
     return line.hasOption(SEARCH_ARG);
   }
 
-  public List<CommandHandler> commandHandlers() {
-    List<CommandHandler> commandHandlers = new ArrayList<>();
+  public CommandHandlers commandHandlers() {
+    CommandHandlers commandHandlers = new CommandHandlers();
     readOptionalExecuteCommands().ifPresent(commandHandlers::add);
     readOptionalSaveScript().ifPresent(commandHandlers::add);
     readOptionalConsoleWriter().ifPresent(commandHandlers::add);

@@ -1,4 +1,4 @@
-package ru.qwerl.mkvsoundmerger.handler.command;
+package ru.qwerl.mkvsoundmerger.handler;
 
 import lombok.extern.slf4j.Slf4j;
 

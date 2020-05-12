@@ -30,7 +30,7 @@ public class App {
         ? searchInDirectory(properties.videoDirectory())
         : searchByConcretePaths(properties.soundDirectories(), properties.subtitleDirectories());
     Map<File, Collection<File>> videoToAttachableFiles = findVideoToAttachableFileLinks(videoFiles, attachableDirectoryToAttachableFiles);
-    List<Command> commands = buildCommands(videoToAttachableFiles);
+    List<Command> commands = buildCommands(videoToAttachableFiles, properties.saveDirectory());
     properties.commandHandlers().pushCommands(commands);
   }
 

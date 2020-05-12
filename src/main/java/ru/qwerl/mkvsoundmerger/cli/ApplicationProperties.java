@@ -14,6 +14,7 @@ import java.util.Set;
 public class ApplicationProperties {
 
   private File videoDirectory;
+  private File saveDirectory;
   private boolean isSearchEnabled;
   private Set<File> soundDirectories;
   private Set<File> subtitleDirectories;

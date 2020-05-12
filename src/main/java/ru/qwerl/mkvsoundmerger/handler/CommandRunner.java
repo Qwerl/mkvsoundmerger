@@ -10,12 +10,12 @@ public class CommandRunner implements CommandHandler {
     return new CommandRunner();
   }
 
-    @SneakyThrows
-    public void handleCommands(List<String> commands) {
-        Process process = new ProcessBuilder(commands)
-            .inheritIO()
-            .start();
-        process.waitFor();
-    }
+  @SneakyThrows
+  public void handleCommands(List<String> commands) {
+    Process process = new ProcessBuilder(commands)
+        .inheritIO()
+        .start();
+    process.waitFor();
+  }
 
 }

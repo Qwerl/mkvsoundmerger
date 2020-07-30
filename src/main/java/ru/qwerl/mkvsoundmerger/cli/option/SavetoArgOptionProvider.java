@@ -10,7 +10,7 @@ public class SavetoArgOptionProvider implements OptionProvider {
   public Option getOption() {
     return Option.builder(SAVE_ARG)
         .hasArg(true)
-        .required(true)
+        .required(false)
         .numberOfArgs(1)
         .desc("directory to save combined files")
         .build();

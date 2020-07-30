@@ -69,7 +69,7 @@
         <configuration>
           <archive>
             <manifest>
-              <mainClass>ru.qwerl.mkvsoundmerger.App</mainClass>
+              <mainClass>ru.qwerl.mkvsoundmerger.AppWithPlexWorkaround</mainClass>
             </manifest>
           </archive>
           <descriptorRefs>

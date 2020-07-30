@@ -1,5 +1,7 @@
 package ru.qwerl.mkvsoundmerger.builder;
 
+import org.jetbrains.annotations.Nullable;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -12,13 +14,16 @@ public class CommandBuilder {
 
   private static final String PATH_SEPARATOR = getDefault().getSeparator();
 
-  public static List<Command> buildCommands(Map<File, Collection<File>> videoToAttachableFiles, File saveDirectory) {
+  public static List<Command> buildCommands(Map<File, Collection<File>> videoToAttachableFiles,
+                                            @Nullable File saveDirectory) {
     List<Command> commands = new ArrayList<>();
     videoToAttachableFiles.forEach((video, attachableFile) -> commands.add(buildCommand(video, attachableFile, saveDirectory)));
     return commands;
   }
 
-  private static Command buildCommand(File video, Collection<File> attachableFiles, File saveDirectory) {
+  private static Command buildCommand(File video,
+                                      Collection<File> attachableFiles,
+                                      @Nullable File saveDirectory) {
     Command commands = new Command();
     commands.add("mkvmerge");
     commands.add("-o");
@@ -32,7 +37,8 @@ public class CommandBuilder {
     return commands;
   }
 
-  private static String getOutputVideoAbsolutePath(File video, File saveDirectory) {
+  private static String getOutputVideoAbsolutePath(File video,
+                                                   @Nullable File saveDirectory) {
     String saveTo = saveDirectory != null
         ? saveDirectory.getAbsolutePath()
         : video.getAbsoluteFile().getParentFile().getAbsolutePath() + PATH_SEPARATOR + "combined";

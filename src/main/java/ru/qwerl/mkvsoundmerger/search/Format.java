@@ -11,7 +11,7 @@ public class Format {
   public enum Video {
     MKV(".mkv"),
     AVI(".avi");
-    private String extension;
+    private final String extension;
 
     Video(String extension) {
       this.extension = extension;
@@ -21,7 +21,7 @@ public class Format {
       return extension;
     }
 
-    public static Set<String> extensionsList() {
+    public static Set<String> extensions() {
       return stream(values())
           .map(Video::extension)
           .collect(Collectors.toSet());
@@ -31,8 +31,9 @@ public class Format {
 
   public enum Sound {
     MKA(".mka"),
+    AAC(".aac"),
     AC3(".ac3");
-    private String extension;
+    private final String extension;
 
     Sound(String extension) {
       this.extension = extension;
@@ -42,7 +43,7 @@ public class Format {
       return extension;
     }
 
-    public static Set<String> extensionsList() {
+    public static Set<String> extensions() {
       return stream(values())
           .map(Sound::extension)
           .collect(Collectors.toSet());
@@ -52,7 +53,7 @@ public class Format {
 
   public enum Subtitle {
     ASS(".ass");
-    private String extension;
+    private final String extension;
 
     Subtitle(String extension) {
       this.extension = extension;
@@ -62,7 +63,7 @@ public class Format {
       return extension;
     }
 
-    public static Set<String> extensionsList() {
+    public static Set<String> extensions() {
       return stream(values())
           .map(Subtitle::extension)
           .collect(Collectors.toSet());
@@ -71,8 +72,8 @@ public class Format {
 
   public static Set<String> attachableFilesExtensions() {
     Set<String> extensionsList = new HashSet<>();
-    extensionsList.addAll(Sound.extensionsList());
-    extensionsList.addAll(Subtitle.extensionsList());
+    extensionsList.addAll(Sound.extensions());
+    extensionsList.addAll(Subtitle.extensions());
     return extensionsList;
   }
 

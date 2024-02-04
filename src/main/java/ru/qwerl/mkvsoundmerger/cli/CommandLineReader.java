@@ -49,7 +49,7 @@ public class CommandLineReader {
         .videoDirectory(mainDirectory)
         .soundDirectories(soundDirectories(mainDirectory))
         .subtitleDirectories(subtitleDirectories(mainDirectory))
-        .commandHandlers(commandHandlers())
+        .commandHandlers(commandHandlers(mainDirectory))
         .saveDirectory(saveDirectory())
         .build();
   }
@@ -92,17 +92,17 @@ public class CommandLineReader {
     return subtitlePaths;
   }
 
-  private CommandHandlers commandHandlers() {
+  private CommandHandlers commandHandlers(File mainDirectory) {
     CommandHandlers commandHandlers = new CommandHandlers();
     readOptionalConsoleWriter().ifPresent(commandHandlers::add);
-    readOptionalSaveScript().ifPresent(commandHandlers::add);
+    readOptionalSaveScript(mainDirectory).ifPresent(commandHandlers::add);
     readOptionalExecuteCommands().ifPresent(commandHandlers::add);
     return commandHandlers;
   }
 
-  private Optional<CommandHandler> readOptionalSaveScript() {
+  private Optional<CommandHandler> readOptionalSaveScript(File mainDirectory) {
     return line.hasOption(SAVE_FILE_ARG)
-        ? Optional.of(scriptFileGenerator())
+        ? Optional.of(scriptFileGenerator(mainDirectory))
         : empty();
   }
 

@@ -1,6 +1,7 @@
 package ru.qwerl.mkvsoundmerger.search;
 
 import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
 
 import java.io.File;
 import java.util.Collection;
@@ -13,7 +14,7 @@ public class VideoAttachableFileLinker {
 
   public static Map<File, Collection<File>> findVideoToAttachableFileLinks(Set<File> videoFiles,
                                                                            Map<File, Set<File>> attachableDirectoryToAttachableFile) {
-    HashMultimap<File, File> videoToAttachableFiles = HashMultimap.create();
+    Multimap<File, File> videoToAttachableFiles = HashMultimap.create();
     videoFiles.forEach((video) ->
         attachableDirectoryToAttachableFile.values().forEach((attachableFiles) ->
             attachableFiles.stream()

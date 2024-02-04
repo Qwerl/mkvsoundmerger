@@ -4,8 +4,6 @@ import java.io.File;
 
 import org.junit.Test;
 
-import static org.junit.Assert.assertTrue;
-
 /**
  * Unit test for simple App.
  */
@@ -18,14 +16,14 @@ public class AppTest {
       "-sound", "Rus Sounds/first", "Eng Sounds",
       "-console",
       "-search",
-      "-saveto", "/somepath"
+      "-saveto", "/somepath",
+      "-sf"
   };
 
   @Test
   //-video "<project path>/src/test/resource/test_hierarchy/Elfen Lied [BDRemux 1080p]" -sound "Rus Sounds" "Eng Sounds" -console
   public void testApp() {
     APP.run(VIDEO_AND_SOUND_EQUALS_NAMES);
-    assertTrue(true);
   }
 
   private final static String[] VIDEO_AND_SOUND_DIFFERENT_NAMES = new String[] {
@@ -38,7 +36,6 @@ public class AppTest {
   //-video 'Boku dake ga Inai Machi [TV][BDRemux][2016]' -search -console
   public void testApp2() {
     APP.run(VIDEO_AND_SOUND_DIFFERENT_NAMES);
-    assertTrue(true);
   }
 
   //TODO: create CommandHandler to provide commands for tests

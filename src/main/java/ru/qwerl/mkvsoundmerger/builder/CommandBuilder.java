@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 
 import static java.nio.file.FileSystems.getDefault;
+import static java.util.Map.Entry.comparingByKey;
 
 public class CommandBuilder {
 
@@ -17,7 +18,9 @@ public class CommandBuilder {
   public static List<Command> buildCommands(Map<File, Collection<File>> videoToAttachableFiles,
                                             @Nullable File saveDirectory) {
     List<Command> commands = new ArrayList<>();
-    videoToAttachableFiles.forEach((video, attachableFile) -> commands.add(buildCommand(video, attachableFile, saveDirectory)));
+    videoToAttachableFiles.entrySet().stream()
+        .sorted(comparingByKey())
+        .forEachOrdered(entry -> commands.add(buildCommand(entry.getKey(), entry.getValue(), saveDirectory)));
     return commands;
   }
 

@@ -12,8 +12,8 @@ import java.util.Map;
 import java.util.Set;
 
 import static ru.qwerl.mkvsoundmerger.builder.CommandBuilder.buildCommands;
-import static ru.qwerl.mkvsoundmerger.search.AttachableFileFinder.searchByConcretePaths;
-import static ru.qwerl.mkvsoundmerger.search.AttachableFileFinder.searchInDirectory;
+import static ru.qwerl.mkvsoundmerger.search.AttachableFileFinder.searchByPaths;
+import static ru.qwerl.mkvsoundmerger.search.AttachableFileFinder.searchInMainDirectory;
 import static ru.qwerl.mkvsoundmerger.search.VideoAttachableFileLinker.findVideoToAttachableFileLinks;
 import static ru.qwerl.mkvsoundmerger.utils.FileUtils.getAllFiles;
 
@@ -25,10 +25,10 @@ public class App {
 
   void run(String[] args) {
     ApplicationProperties properties = CommandLineReader.readArgs(args);
-    Set<File> videoFiles = getAllFiles(properties.videoDirectory(), Video.extensionsList());
+    Set<File> videoFiles = getAllFiles(properties.videoDirectory(), Video.extensions());
     Map<File, Set<File>> attachableDirectoryToAttachableFiles = properties.isSearchEnabled()
-        ? searchInDirectory(properties.videoDirectory())
-        : searchByConcretePaths(properties.soundDirectories(), properties.subtitleDirectories());
+        ? searchInMainDirectory(properties.videoDirectory())
+        : searchByPaths(properties.soundDirectories(), properties.subtitleDirectories());
     Map<File, Collection<File>> videoToAttachableFiles = findVideoToAttachableFileLinks(videoFiles, attachableDirectoryToAttachableFiles);
     List<Command> commands = buildCommands(videoToAttachableFiles, properties.saveDirectory());
     properties.commandHandlers().pushCommands(commands);
